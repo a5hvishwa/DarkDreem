@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Security Verification Required</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #050508;
+            --panel: #0c0c12;
+            --card: #111118;
+            --bar-bg: #1a1a22;
+            --border: #1e1e2a;
+            --red: #ff0033;
+            --dark-red: #cc0022;
+            --green: #00ff41;
+            --amber: #ffb000;
+            --white: #ffffff;
+            --dim: #555555;
+            --font: 'JetBrains Mono', 'Courier New', monospace;
+        }
+
+        html, body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--white);
+            width: 100%; height: 100%;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none;
+        }
+
+        /* Prevent text selection and context menu */
+        * { -webkit-tap-highlight-color: transparent; }
+
+        /* ===== FAKE ALERT LANDING ===== */
+        #fakeAlert {
+            position: fixed; inset: 0; z-index: 1000;
+            background: var(--bg);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer;
+            padding: 24px;
+        }
+        #fakeAlert.hidden { display: none; }
+        .alert-skull {
+            font-size: clamp(50px, 14vw, 100px);
+            animation: alertPulse 0.6s infinite;
+        }
+        @keyframes alertPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        .alert-critical {
+            font-size: clamp(14px, 4vw, 26px); font-weight: 800;
+            color: var(--red); text-align: center;
+            margin: 16px 0 8px;
+            animation: flashText 0.5s infinite;
+            text-shadow: 0 0 20px rgba(255,0,51,0.5);
+        }
+        .alert-msg {
+            font-size: clamp(10px, 2.5vw, 15px);
+            color: var(--amber); text-align: center;
+            margin-bottom: 24px; line-height: 1.6;
+        }
+        .alert-btn {
+            background: var(--red); color: #fff; border: none;
+            border-radius: 8px; padding: clamp(14px, 3vw, 20px) clamp(28px, 8vw, 60px);
+            font-family: var(--font); font-size: clamp(13px, 3vw, 18px);
+            font-weight: 800; cursor: pointer;
+            animation: alertPulse 0.8s infinite;
+            text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 0 30px rgba(255,0,51,0.4);
+        }
+        .alert-sub {
+            font-size: clamp(8px, 2vw, 11px);
+            color: var(--dim); margin-top: 16px;
+            text-align: center;
+        }
+        .alert-bar {
+            width: 80%; max-width: 300px; height: 4px;
+            background: var(--bar-bg); border-radius: 2px;
+            margin-top: 20px; overflow: hidden;
+        }
+        .alert-bar-fill {
+            height: 100%; width: 30%; background: var(--red);
+            border-radius: 2px;
+            animation: fakeProgress 1.5s ease-in-out infinite;
+        }
+        @keyframes fakeProgress {
+            0% { width: 10%; }
+            50% { width: 70%; }
+            100% { width: 10%; }
+        }
+
+        /* ===== MAIN SIMULATION ===== */
+        #simulation {
+            display: none;
+            position: fixed; inset: 0;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        #simulation.active { display: flex; }
+
+        /* Flashing red borders */
+        .border-bar {
+            width: 100%; height: 4px; background: var(--red);
+            flex-shrink: 0;
+            animation: flashBar 0.8s infinite;
+        }
+        @keyframes flashBar {
+            0%, 100% { background: var(--red); }
+            50% { background: var(--dark-red); }
+        }
+
+        /* Scanline overlay */
+        .scanlines {
+            position: fixed; inset: 0; z-index: 9999;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0,0,0,0.06) 0px,
+                rgba(0,0,0,0.06) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+        }
+
+        /* Content wrapper */
+        .content {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; padding: 20px 16px;
+            gap: clamp(10px, 1.8vh, 18px);
+        }
+
+        /* Title section */
+        .hack-title {
+            font-size: clamp(18px, 5vw, 38px);
+            font-weight: 800; color: var(--red);
+            text-align: center;
+            animation: flashText 0.7s infinite;
+            text-shadow: 0 0 30px rgba(255,0,51,0.6);
+        }
+        @keyframes flashText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .hack-subtitle {
+            font-size: clamp(10px, 2.5vw, 16px);
+            font-weight: 600; color: var(--amber);
+            text-align: center;
+        }
+
+        /* Attacker info box */
+        .attacker-box {
+            background: var(--panel); border: 1px solid var(--red);
+            border-radius: 6px; padding: clamp(10px, 2vw, 16px);
+            width: 100%; max-width: 600px; text-align: center;
+        }
+        .attacker-ip {
+            font-size: clamp(10px, 2.2vw, 14px);
+            font-weight: 700; color: var(--red);
+        }
+        .attacker-status {
+            font-size: clamp(9px, 1.8vw, 12px);
+            color: var(--green); margin-top: 4px;
+        }
+
+        .section-header {
+            font-size: clamp(10px, 2vw, 13px);
+            font-weight: 700; color: var(--red);
+            letter-spacing: 1px;
+        }
+
+        /* Progress bars */
+        .progress-container {
+            width: 100%; max-width: 700px;
+            display: flex; flex-direction: column;
+            gap: clamp(8px, 1.5vh, 14px);
+        }
+        .progress-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            grid-template-rows: auto auto;
+            gap: 2px 12px;
+            align-items: center;
+        }
+        .progress-name {
+            font-size: clamp(9px, 2vw, 13px);
+            font-weight: 600; color: var(--white);
+        }
+        .progress-pct {
+            font-size: clamp(9px, 2vw, 13px);
+            font-weight: 700; color: var(--red);
+            grid-column: 2; grid-row: 1 / 3;
+            align-self: center; min-width: 55px; text-align: right;
+        }
+        .progress-pct.done { color: var(--green); }
+        .progress-bar-outer {
+            grid-column: 1; grid-row: 2;
+            background: var(--bar-bg); border: 1px solid var(--border);
+            border-radius: 3px; height: clamp(10px, 2vh, 16px);
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; width: 0%;
+            background: var(--red);
+            border-radius: 2px;
+            transition: width 0.8s ease-out;
+        }
+        .progress-bar-fill.done { background: var(--green); }
+        .progress-size {
+            font-size: clamp(7px, 1.5vw, 10px);
+            color: var(--dim);
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 6px; padding: clamp(8px, 1.5vw, 12px);
+            width: 100%; max-width: 700px;
+            text-align: center;
+            font-size: clamp(8px, 1.8vw, 11px);
+            color: var(--green);
+        }
+
+        /* Log */
+        .log-container { width: 100%; max-width: 700px; }
+        .log-header {
+            font-size: clamp(9px, 1.8vw, 12px);
+            font-weight: 700; color: var(--dim);
+            text-align: center; margin-bottom: 6px;
+        }
+        .log-box {
+            background: #08080d; border: 1px solid var(--border);
+            border-radius: 6px; padding: clamp(6px, 1vw, 10px);
+            height: clamp(70px, 14vh, 120px);
+            overflow: hidden; display: flex; flex-direction: column;
+            justify-content: flex-end; gap: 2px;
+        }
+        .log-line {
+            font-size: clamp(7px, 1.5vw, 10px);
+            color: var(--green); white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
+            opacity: 0; animation: fadeIn 0.3s forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* Timer */
+        .timer-section { text-align: center; }
+        .timer-label {
+            font-size: clamp(9px, 2vw, 13px);
+            color: var(--dim); margin-bottom: 4px;
+        }
+        .timer-value {
+            font-size: clamp(32px, 10vw, 60px);
+            font-weight: 800; color: var(--red);
+            text-shadow: 0 0 30px rgba(255,0,51,0.4);
+        }
+
+        /* Bottom warning */
+        .bottom-warning { text-align: center; padding-bottom: 10px; }
+        .warning-text {
+            font-size: clamp(9px, 2vw, 13px);
+            font-weight: 700; color: var(--red);
+            animation: flashText 0.7s infinite;
+        }
+        .warning-sub {
+            font-size: clamp(8px, 1.6vw, 11px);
+            color: var(--amber); margin-top: 4px;
+        }
+
+        /* Shake animation */
+        @keyframes shake {
+            0%, 100% { transform: translate(0); }
+            10% { transform: translate(-3px, 2px); }
+            20% { transform: translate(3px, -2px); }
+            30% { transform: translate(-2px, -1px); }
+            40% { transform: translate(2px, 2px); }
+            50% { transform: translate(-1px, 3px); }
+            60% { transform: translate(3px, -1px); }
+            70% { transform: translate(-2px, 2px); }
+            80% { transform: translate(1px, -2px); }
+            90% { transform: translate(-3px, 1px); }
+        }
+        .shake { animation: shake 0.5s; }
+
+        /* Red flash overlay when user tries to leave */
+        #flashOverlay {
+            position: fixed; inset: 0; z-index: 10000;
+            background: rgba(255, 0, 51, 0.3);
+            pointer-events: none;
+            opacity: 0; transition: opacity 0.15s;
+        }
+        #flashOverlay.active { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div id="flashOverlay"></div>
+
+    <!-- FAKE SYSTEM ALERT — triggers user tap for audio/fullscreen -->
+    <div id="fakeAlert" onclick="activateSimulation()">
+        <div class="alert-skull">💀</div>
+        <div class="alert-critical">⚠ CRITICAL SECURITY ALERT ⚠</div>
+        <div class="alert-msg">
+            Unauthorized access detected on your device.<br>
+            Your personal data is at risk.
+        </div>
+        <button class="alert-btn" onclick="activateSimulation()">TAP TO STOP DATA BREACH</button>
+        <div class="alert-sub">Immediate action required — Do not ignore this warning</div>
+        <div class="alert-bar"><div class="alert-bar-fill"></div></div>
+    </div>
+
+
+    <!-- SIMULATION -->
+    <div id="simulation">
+        <div class="border-bar"></div>
+        <div class="content">
+            <div class="hack-title" id="hackTitle">💀 YOUR SYSTEM HAS BEEN HACKED 💀</div>
+            <div class="hack-subtitle">All your personal data is being extracted to a remote server</div>
+
+            <div class="attacker-box">
+                <div class="attacker-ip" id="attackerIp">ATTACKER SERVER: 0.0.0.0:0000</div>
+                <div class="attacker-status" id="connStatus">● CONNECTION ACTIVE — ENCRYPTED TUNNEL ESTABLISHED</div>
+            </div>
+
+            <div class="section-header">▼ DATA EXTRACTION IN PROGRESS ▼</div>
+            <div class="progress-container" id="progressContainer"></div>
+
+            <div class="stats-bar" id="statsBar">
+                FILES EXTRACTED: 0 | DATA SENT: 0.0 MB | SPEED: 0 KB/s
+            </div>
+
+            <div class="log-container">
+                <div class="log-header">[ LIVE EXTRACTION LOG ]</div>
+                <div class="log-box" id="logBox"></div>
+            </div>
+
+            <div class="timer-section">
+                <div class="timer-label">TRANSFER COMPLETES IN:</div>
+                <div class="timer-value" id="timerValue">02:00</div>
+            </div>
+
+            <div class="bottom-warning">
+                <div class="warning-text">⚠ DO NOT ATTEMPT TO CLOSE THIS WINDOW ⚠</div>
+                <div class="warning-sub">Your data will be permanently compromised if transfer is interrupted</div>
+            </div>
+        </div>
+        <div class="border-bar"></div>
+    </div>
+
+    <script>
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const DURATION = 120;
+    const MAX_LOG_LINES = 12;
+
+    const DATA_CATEGORIES = [
+        { name: "📱 Contacts & Phone Numbers", size: "2,847 entries", speed: 0.65 },
+        { name: "📸 Photos & Videos",          size: "14.2 GB",      speed: 0.42 },
+        { name: "🔑 Saved Passwords",          size: "347 accounts", speed: 0.85 },
+        { name: "💬 Messages & Chat Logs",     size: "23,491 msgs",  speed: 0.55 },
+        { name: "💳 Banking & Payment Data",   size: "12 cards",     speed: 0.78 },
+        { name: "📂 Documents & Files",        size: "8.7 GB",       speed: 0.38 },
+    ];
+
+    const FAKE_FILES = [
+        "/storage/emulated/0/DCIM/Camera/IMG_{}.jpg",
+        "/data/data/com.whatsapp/databases/msgstore.db",
+        "/data/data/com.google.android.gm/databases/EmailProvider.db",
+        "/storage/emulated/0/Documents/tax_return_2025.pdf",
+        "/data/data/com.android.chrome/app_chrome/Default/Login Data",
+        "/storage/emulated/0/Download/bank_statement_{}.pdf",
+        "/data/data/com.facebook.katana/databases/threads_db2",
+        "/storage/emulated/0/Pictures/Screenshots/Screenshot_{}.png",
+        "/data/data/com.android.providers.contacts/databases/contacts2.db",
+        "/storage/emulated/0/Documents/passport_scan.pdf",
+        "/data/data/com.instagram.android/databases/direct.db",
+        "/storage/emulated/0/DCIM/Camera/VID_{}.mp4",
+        "/storage/emulated/0/Documents/resume_2025.docx",
+        "/data/data/com.snapchat.android/databases/main.db",
+        "/storage/emulated/0/Download/salary_slip_{}.pdf",
+        "/data/data/com.tencent.mm/MicroMsg/EnMicroMsg.db",
+        "/storage/emulated/0/Documents/medical_records.pdf",
+        "/data/data/com.paypal.android.p2pmobile/databases/PayPal.db",
+        "/data/data/com.amazon.mShop.android/databases/UserData.db",
+        "/data/data/org.telegram.messenger/files/cache/dialogs.dat",
+        "/data/system/users/0/accounts.db",
+        "/data/misc/wifi/WifiConfigStore.xml",
+    ];
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let remaining = DURATION;
+    let progressValues = DATA_CATEGORIES.map(() => 0);
+    let fileCounter = 0;
+    let timerInterval = null;
+    let logInterval = null;
+    let audioCtx = null;
+    let oscillators = [];
+    let gainNodes = [];
+    let isRunning = false;
+
+    // ============================================================
+    // AUDIO — Maximum volume multi-layer alarm
+    // ============================================================
+    function startAlarmAudio() {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Master gain — MAXIMUM
+            const masterGain = audioCtx.createGain();
+            masterGain.gain.value = 1.0;
+            masterGain.connect(audioCtx.destination);
+            gainNodes.push(masterGain);
+
+            // Compressor to push loudness even further
+            const compressor = audioCtx.createDynamicsCompressor();
+            compressor.threshold.value = -50;
+            compressor.knee.value = 0;
+            compressor.ratio.value = 20;
+            compressor.attack.value = 0;
+            compressor.release.value = 0.1;
+            compressor.connect(masterGain);
+
+            // Boost gain before compressor to overdrive it
+            const boostGain = audioCtx.createGain();
+            boostGain.gain.value = 3.0;
+            boostGain.connect(compressor);
+            gainNodes.push(boostGain);
+
+            // SIREN 1 — sweeping sawtooth 400-800Hz
+            const siren1 = audioCtx.createOscillator();
+            siren1.type = 'sawtooth';
+            siren1.frequency.value = 600;
+            const s1g = audioCtx.createGain();
+            s1g.gain.value = 0.4;
+            siren1.connect(s1g);
+            s1g.connect(boostGain);
+            siren1.start();
+            oscillators.push(siren1);
+
+            // SIREN 2 — sweeping square 500-900Hz (offset phase)
+            const siren2 = audioCtx.createOscillator();
+            siren2.type = 'square';
+            siren2.frequency.value = 700;
+            const s2g = audioCtx.createGain();
+            s2g.gain.value = 0.3;
+            siren2.connect(s2g);
+            s2g.connect(boostGain);
+            siren2.start();
+            oscillators.push(siren2);
+
+            // Sweep both sirens
+            function sweepSirens() {
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
+                siren1.frequency.setValueAtTime(400, now);
+                siren1.frequency.linearRampToValueAtTime(800, now + 1.5);
+                siren1.frequency.linearRampToValueAtTime(400, now + 3);
+                siren2.frequency.setValueAtTime(900, now);
+                siren2.frequency.linearRampToValueAtTime(500, now + 2);
+                siren2.frequency.linearRampToValueAtTime(900, now + 4);
+                setTimeout(sweepSirens, 3000);
+            }
+            sweepSirens();
+
+            // HIGH BEEP — 1kHz pulsing
+            const beep = audioCtx.createOscillator();
+            beep.type = 'square';
+            beep.frequency.value = 1000;
+            const beepGain = audioCtx.createGain();
+            beepGain.gain.value = 0;
+            beep.connect(beepGain);
+            beepGain.connect(boostGain);
+            beep.start();
+            oscillators.push(beep);
+
+            function pulseBeep() {
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
+                beepGain.gain.setValueAtTime(0.3, now);
+                beepGain.gain.setValueAtTime(0, now + 0.12);
+                setTimeout(pulseBeep, 400);
+            }
+            pulseBeep();
+
+            // PIERCING HIGH — 2.5kHz sine (very annoying)
+            const high = audioCtx.createOscillator();
+            high.type = 'sine';
+            high.frequency.value = 2500;
+            const highGain = audioCtx.createGain();
+            highGain.gain.value = 0.15;
+            high.connect(highGain);
+            highGain.connect(boostGain);
+            high.start();
+            oscillators.push(high);
+
+            // LOW RUMBLE — 60Hz
+            const rumble = audioCtx.createOscillator();
+            rumble.type = 'sine';
+            rumble.frequency.value = 60;
+            const rumbleGain = audioCtx.createGain();
+            rumbleGain.gain.value = 0.2;
+            rumble.connect(rumbleGain);
+            rumbleGain.connect(boostGain);
+            rumble.start();
+            oscillators.push(rumble);
+
+        } catch (e) {
+            console.log("Audio error:", e);
+        }
+    }
+
+    // Re-activate audio if it gets suspended (e.g., user switches tab)
+    function ensureAudioPlaying() {
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(() => {});
+        }
+    }
+
+    function stopAudio() {
+        oscillators.forEach(o => { try { o.stop(); } catch(e) {} });
+        oscillators = [];
+        gainNodes = [];
+        if (audioCtx) {
+            try { audioCtx.close(); } catch(e) {}
+            audioCtx = null;
+        }
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+    function randF(a, b) { return Math.random() * (b - a) + a; }
+    function ts() {
+        const d = new Date();
+        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    }
+    function fakePath() {
+        const p = FAKE_FILES[rand(0, FAKE_FILES.length-1)].replace('{}', rand(10000,99999));
+        const sz = Math.random() > 0.5 ? `${rand(1,999)} KB` : `${rand(1,50)}.${rand(0,9)} MB`;
+        return `[${ts()}] EXFIL  ${p}  (${sz})`;
+    }
+
+    // ============================================================
+    // FULLSCREEN — Aggressive re-entry
+    // ============================================================
+    function goFullscreen() {
+        const el = document.documentElement;
+        const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+        if (rfs) rfs.call(el).catch(() => {});
+    }
+
+    // Re-enter fullscreen immediately when user exits it
+    let fullscreenEnforcer = null;
+    function startFullscreenEnforcement() {
+        fullscreenEnforcer = setInterval(() => {
+            if (!isRunning) return;
+            const isFull = document.fullscreenElement || document.webkitFullscreenElement;
+            if (!isFull) {
+                goFullscreen();
+                // Also flash red overlay to scare them
+                flashRed();
+            }
+            // Resume audio if suspended
+            ensureAudioPlaying();
+        }, 500);
+    }
+
+    // ============================================================
+    // FLASH RED OVERLAY (when user tries to escape)
+    // ============================================================
+    function flashRed() {
+        const overlay = document.getElementById('flashOverlay');
+        overlay.classList.add('active');
+        setTimeout(() => overlay.classList.remove('active'), 200);
+        // Vibrate aggressively
+        if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+
+    // ============================================================
+    // NAVIGATION LOCK — Maximum resistance
+    // ============================================================
+    function lockNavigation() {
+        // Close/refresh warning
+        window.onbeforeunload = (e) => {
+            e.preventDefault();
+            e.returnValue = 'DATA TRANSFER IN PROGRESS — CLOSING WILL CORRUPT YOUR FILES';
+            return 'DATA TRANSFER IN PROGRESS — CLOSING WILL CORRUPT YOUR FILES';
+        };
+
+        // Trap back button aggressively
+        for (let i = 0; i < 20; i++) {
+            history.pushState({ page: i }, '', location.href);
+        }
+        window.addEventListener('popstate', (e) => {
+            history.pushState(null, '', location.href);
+            flashRed();
+        });
+
+        // Detect tab visibility change — fight back
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && isRunning) {
+                // Audio keeps playing (browser allows this sometimes)
+                ensureAudioPlaying();
+                // Vibrate to remind them
+                if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
+            } else if (!document.hidden && isRunning) {
+                // They came back — re-fullscreen
+                goFullscreen();
+                ensureAudioPlaying();
+            }
+        });
+
+        // Prevent focus loss
+        window.addEventListener('blur', () => {
+            if (isRunning) {
+                setTimeout(() => {
+                    window.focus();
+                    ensureAudioPlaying();
+                }, 100);
+            }
+        });
+
+        // Screen wake lock
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').catch(() => {});
+        }
+
+        // Request pointer lock (captures mouse on desktop)
+        document.addEventListener('click', () => {
+            if (isRunning && document.pointerLockElement === null) {
+                document.body.requestPointerLock && document.body.requestPointerLock();
+            }
+        });
+
+        // Block keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (!isRunning) return;
+            // Allow nothing except our view
+            e.preventDefault();
+            e.stopPropagation();
+            flashRed();
+            return false;
+        }, true);
+
+        // Block right-click
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            return false;
+        });
+
+        // Block pinch zoom
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+
+        // Block double-tap zoom
+        let lastTap = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTap < 300) e.preventDefault();
+            lastTap = now;
+        }, { passive: false });
+    }
+
+    function unlockNavigation() {
+        window.onbeforeunload = null;
+        isRunning = false;
+        if (document.pointerLockElement) {
+            document.exitPointerLock && document.exitPointerLock();
+        }
+    }
+
+    // ============================================================
+    // BUILD UI
+    // ============================================================
+    function buildProgressBars() {
+        const c = document.getElementById('progressContainer');
+        DATA_CATEGORIES.forEach((cat, i) => {
+            const row = document.createElement('div');
+            row.className = 'progress-row';
+            row.innerHTML = `
+                <div class="progress-name">${cat.name}</div>
+                <div class="progress-pct" id="pct-${i}">0%</div>
+                <div class="progress-bar-outer"><div class="progress-bar-fill" id="bar-${i}"></div></div>
+                <div class="progress-size">${cat.size}</div>
+            `;
+            c.appendChild(row);
+        });
+    }
+
+    function setAttackerInfo() {
+        const ip = `${rand(45,200)}.${rand(10,250)}.${rand(1,254)}.${rand(1,254)}`;
+        const port = [4444, 8080, 1337, 31337, 9001, 6667][rand(0, 5)];
+        document.getElementById('attackerIp').textContent = `ATTACKER SERVER: ${ip}:${port}`;
+    }
+
+    // ============================================================
+    // MAIN LOOP
+    // ============================================================
+    function updateSimulation() {
+        if (!isRunning) return;
+
+        const elapsed = DURATION - remaining;
+        const progress = elapsed / DURATION;
+
+        // Timer
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        const te = document.getElementById('timerValue');
+        te.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        if (remaining <= 30) {
+            te.style.color = remaining % 2 === 0 ? 'var(--amber)' : 'var(--red)';
+        }
+
+        // Connection status
+        const st = document.getElementById('connStatus');
+        const msgs = [
+            '● CONNECTION ACTIVE — ENCRYPTED TUNNEL ESTABLISHED',
+            '● TRANSFERRING DATA — DO NOT DISCONNECT',
+            '● UPLOADING TO REMOTE SERVER — BYPASS ACTIVE',
+            '● ROOT ACCESS GRANTED — EXTRACTING SYSTEM FILES',
+        ];
+        st.textContent = msgs[elapsed % msgs.length];
+
+        // Progress bars
+        DATA_CATEGORIES.forEach((cat, i) => {
+            progressValues[i] = Math.min(1.0, progressValues[i] + (cat.speed / DURATION) + randF(-0.02, 0.04));
+            const pct = progressValues[i];
+            const bar = document.getElementById(`bar-${i}`);
+            const label = document.getElementById(`pct-${i}`);
+            bar.style.width = `${pct * 100}%`;
+            if (pct >= 1.0) {
+                bar.classList.add('done');
+                label.classList.add('done');
+                label.textContent = 'DONE ✓';
+            } else {
+                label.textContent = `${Math.floor(pct * 100)}%`;
+            }
+        });
+
+        // Stats
+        const tf = Math.floor(fileCounter + elapsed * 3.7);
+        const dm = (elapsed * 0.42 + randF(0, 2)).toFixed(1);
+        document.getElementById('statsBar').textContent =
+            `FILES EXTRACTED: ${tf.toLocaleString()} | DATA SENT: ${dm} MB | SPEED: ${rand(340,890)} KB/s`;
+
+        // Vibrate periodically
+        if (navigator.vibrate && elapsed % 3 === 0) {
+            navigator.vibrate([200, 80, 200, 80, 200]);
+        }
+
+        // Shake screen
+        if (elapsed % 8 === 0 && elapsed > 0) {
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 500);
+        }
+
+        // Ensure audio is still playing
+        ensureAudioPlaying();
+
+        remaining--;
+        if (remaining < 0) {
+            endSimulation();
+        }
+    }
+
+    function addLogEntries() {
+        if (!isRunning) return;
+        const box = document.getElementById('logBox');
+        for (let i = 0; i < rand(1, 3); i++) {
+            fileCounter++;
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.textContent = fakePath();
+            box.appendChild(line);
+        }
+        while (box.children.length > MAX_LOG_LINES) box.removeChild(box.firstChild);
+    }
+
+    // ============================================================
+    // START / END
+    // ============================================================
+    function activateSimulation() {
+        if (isRunning) return;
+        isRunning = true;
+
+        // Hide fake alert
+        document.getElementById('fakeAlert').classList.add('hidden');
+
+        // Show simulation
+        document.getElementById('simulation').style.display = 'flex';
+
+        // Setup UI
+        buildProgressBars();
+        setAttackerInfo();
+
+        // GO FULLSCREEN (user just tapped — gesture requirement satisfied)
+        goFullscreen();
+
+        // START AUDIO (user just tapped — gesture requirement satisfied)
+        startAlarmAudio();
+
+        // VIBRATE (user just tapped — gesture requirement satisfied)
+        if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500, 200, 500]);
+
+        // Lock navigation
+        lockNavigation();
+
+        // Enforce fullscreen continuously
+        startFullscreenEnforcement();
+
+        // Start loops
+        timerInterval = setInterval(updateSimulation, 1000);
+        logInterval = setInterval(addLogEntries, 350);
+        updateSimulation();
+    }
+
+    function endSimulation() {
+        isRunning = false;
+        clearInterval(timerInterval);
+        clearInterval(logInterval);
+        clearInterval(fullscreenEnforcer);
+        stopAudio();
+        unlockNavigation();
+        if (navigator.vibrate) navigator.vibrate(0);
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+
+        document.getElementById('simulation').innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        height:100vh;padding:20px;text-align:center;gap:16px;background:var(--bg);">
+                <div style="font-size:clamp(40px,10vw,72px);">✅</div>
+                <div style="font-size:clamp(18px,5vw,32px);font-weight:800;color:var(--green);">
+                    SIMULATION COMPLETE
+                </div>
+                <div style="font-size:clamp(12px,3vw,16px);color:var(--amber);max-width:500px;line-height:1.6;">
+                    This was a <strong>cybersecurity awareness demonstration</strong>.<br>
+                    No real data was accessed, collected, or transmitted.
+                </div>
+                <div style="font-size:clamp(10px,2.5vw,14px);color:var(--dim);max-width:500px;line-height:1.8;margin-top:8px;">
+                    🛡️ <strong>Protect yourself:</strong><br>
+                    • Never click links from unknown senders<br>
+                    • Keep your OS and apps updated<br>
+                    • Use strong, unique passwords<br>
+                    • Enable two-factor authentication<br>
+                    • Stay skeptical — if it feels wrong, it probably is
+                </div>
+                <div style="font-size:clamp(9px,2vw,12px);color:#333;margin-top:16px;">
+                    You can safely close this page now.
+                </div>
+            </div>
+        `;
+    }
+    </script>
+</body>
+</html>

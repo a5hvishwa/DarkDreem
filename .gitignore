@@ -2,3 +2,11 @@ venv/
 __pycache__/
 *.pyc
 alert_tone.wav
+
+# Android build artifacts
+android-app/.gradle/
+android-app/.idea/
+android-app/build/
+android-app/app/build/
+android-app/local.properties
+web/*.apk
