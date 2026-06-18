@@ -1,88 +1,85 @@
 # DarkDreem — Cybersecurity Awareness Simulation
 
-A Python-based educational tool that demonstrates how nuisance software and social-engineering attacks can temporarily disrupt a user's experience — all within a **safe, controlled environment**.
+A multi-platform educational tool that demonstrates how nuisance software and social-engineering attacks can temporarily disrupt a user's experience. This repository contains three distinct versions of the simulation:
+
+1. **Desktop Simulation** (Python/Tkinter)
+2. **Web Simulation** (HTML/JS/Flask)
+3. **Android Native App** (Java/Android SDK)
 
 ## 🎯 Purpose
 
 This is a **proof-of-concept simulation** for cybersecurity awareness training. It helps users understand how disruptive software works by experiencing a harmless, time-limited demonstration.
 
+---
+
 ## 🚀 Quick Start
 
-### 1. Install dependencies
+### 1. Web Version (Cross-Platform)
+The web version runs in any browser and uses aggressive social engineering (a fake alert screen) to bypass browser auto-play restrictions.
 
 ```bash
+# 1. Install dependencies
 pip install -r requirements.txt
-```
 
-### 2. Generate the alert tone (optional — auto-generated on first run)
+# 2. Launch the Flask web server
+python web_server.py
+
+# 3. Share the simulation using localhost.run (in a new terminal)
+ssh -o StrictHostKeyChecking=no -R 80:localhost:5000 nokey@localhost.run
+```
+Share the generated `*.lhr.life` link with any device.
+
+### 2. Android Native App
+The Android version demonstrates OS-level aggressive persistence by locking the screen, maxing the volume, and disabling the back button.
 
 ```bash
+# Build the APK using Gradle wrapper
+cd android-app
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+./gradlew assembleDebug
+```
+The APK will be generated at: `android-app/app/build/outputs/apk/debug/app-debug.apk`. 
+You can install it via ADB: `adb install -r path/to/app-debug.apk` or download it directly from the web server at `/download.html`.
+
+### 3. Desktop Version (Windows/Linux)
+A full-screen Python/Tkinter simulation that demonstrates aggressive desktop takeover techniques.
+
+```bash
+# 1. Generate the alert tone (required first time)
 python generate_tone.py
+
+# 2. Run the simulation
+python simulation.py
 ```
 
-### 3. Launch the web server
-
-```bash
-python server.py
-```
-
-### 4. Open the demo
-
-Navigate to **http://localhost:5000** in your browser and click **"Launch Demonstration"**.
+---
 
 ## 📁 Project Structure
 
 ```
 DarkDreem/
-├── server.py          # Flask web server with landing page
-├── simulation.py      # Full-screen tkinter simulation
-├── generate_tone.py   # Synthesized alert tone generator
-├── requirements.txt   # Python dependencies
-└── README.md          # This file
+├── web/                   # Web interface (index.html, download.html)
+├── web_server.py          # Flask server to host the web interface
+├── android-app/           # Android Native App source code
+├── simulation.py          # Desktop tkinter simulation
+├── generate_tone.py       # Synthesized alert tone generator
+├── requirements.txt       # Python dependencies
+└── README.md              # This file
 ```
-
-## 🔧 How It Works
-
-| Component | Description |
-|-----------|-------------|
-| **Web Server** (`server.py`) | Serves a styled landing page at `localhost:5000`. Clicking "Launch" triggers the simulation. |
-| **Simulation** (`simulation.py`) | Full-screen tkinter overlay with countdown timer, volume ramp, and rotating educational slides. |
-| **Tone Generator** (`generate_tone.py`) | Creates a multi-layered alarm WAV file using pure sine wave synthesis (no external audio files). |
 
 ## 🛡️ Safety Guarantees
 
-- ✅ **No data collection** — nothing is sent anywhere
-- ✅ **No file modification** — your device is untouched
-- ✅ **No security bypass** — system controls remain functional
-- ✅ **Safe exit** — press `Ctrl+Q` at any time
-- ✅ **Auto-terminate** — ends automatically after 2 minutes
-- ✅ **Open source** — fully auditable code
+- ✅ **No data collection** — nothing is sent anywhere.
+- ✅ **No file modification** — your device is untouched.
+- ✅ **Auto-terminate** — ends automatically after 2 minutes.
 
-## ⌨️ Controls
+## ⌨️ Desktop Controls
 
 | Action | Key |
 |--------|-----|
-| Exit simulation early | `Ctrl + Q` |
+| Exit desktop simulation early | `Ctrl + Q` |
 | Force quit (OS level) | `Alt + F4` or OS task manager |
-
-## 📚 Learning Outcomes
-
-- Python application development
-- Event handling and timers
-- Multimedia playback (pygame)
-- User interface design (tkinter)
-- Web development (Flask)
-- Cybersecurity awareness and ethical software development
 
 ## ⚖️ Ethical Notice
 
-This project is for **educational purposes only**. It must not be used to:
-- Damage devices
-- Collect user data
-- Prevent device shutdown
-- Bypass security controls
-- Interfere with normal device operation
-
----
-
-*Built for cybersecurity awareness training and ethical software development education.*
+This project is for **educational purposes only**. It must not be used to damage devices, collect user data, or interfere with normal device operation without consent.
