@@ -12,7 +12,7 @@ This is a **proof-of-concept simulation** for cybersecurity awareness training. 
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Let Quick Start
 
 ### 1. Web Version (Cross-Platform)
 The web version runs in any browser and uses aggressive social engineering (a fake alert screen) to bypass browser auto-play restrictions.
