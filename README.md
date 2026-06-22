@@ -29,7 +29,7 @@ ssh -o StrictHostKeyChecking=no -R 80:localhost:5000 nokey@localhost.run
 ```
 Share the generated `*.lhr.life` link with any device.
 
-### 2. Android Native App
+### 2. Android Native App for android
 The Android version demonstrates OS-level aggressive persistence by locking the screen, maxing the volume, and disabling the back button.
 
 ```bash
