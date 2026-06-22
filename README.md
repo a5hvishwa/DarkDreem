@@ -83,3 +83,5 @@ DarkDreem/
 ## ⚖️ Ethical Notice
 
 This project is for **educational purposes only**. It must not be used to damage devices, collect user data, or interfere with normal device operation without consent.
+
+Please Don't use missuse of this project
